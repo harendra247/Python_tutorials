@@ -14,7 +14,7 @@ def retry(ExceptionToCheck, tries=3, delay=1, backoff=2):
                 try:
                     return f(*args, **kwargs)
                 except ExceptionToCheck as e:
-                    logger.exception(f"{str(e)}, Retrying in {mdelay} seconds...")
+                    print(f"{str(e)}, Retrying in {mdelay} seconds...")
                     time.sleep(mdelay)
                     mtries -= 1
                     mdelay *= backoff
@@ -37,24 +37,20 @@ class retry:
 
     def __call__(self, f):
 
-        def deco_retry(f):
+        @wraps(f)
+        def wrapped_func(*args, **kwargs):
+            mtries, mdelay = self._max_tries, self._delay
+            while mtries > 1:
+                try:
+                    return f(*args, **kwargs)
+                except self._ExceptionToCheck as e:
+                    logger.exception(f"{str(e)}, Retrying in {mdelay} seconds...")
+                    time.sleep(mdelay)
+                    mtries -= 1
+                    mdelay *= self._backoff
+            return f(*args, **kwargs)
 
-            @wraps(f)
-            def wrapped_func(*args, **kwargs):
-                mtries, mdelay = self._max_tries, self._delay
-                while mtries > 1:
-                    try:
-                        return f(*args, **kwargs)
-                    except self._ExceptionToCheck as e:
-                        logger.exception(f"{str(e)}, Retrying in {mdelay} seconds...")
-                        time.sleep(mdelay)
-                        mtries -= 1
-                        mdelay *= self._backoff
-                return f(*args, **kwargs)
-
-            return wrapped_func
-
-        return deco_retry
+        return wrapped_func
 
 
 # Tests .....................
@@ -63,14 +59,21 @@ class retry:
 def test_fail(text):
     raise Exception("Fail")
 
-test_fail("It works!")
+    
+try:
+    test_fail("It works!")
+except:
+    pass
 
 # Test2
 @retry(Exception, tries=5)
 def test_success(text):
     print(f"Success: {text}")
 
-test_success("it works!")
+try:
+    test_success("it works!")
+except:
+    pass
 
 # Test3
 @retry(Exception, tries=4)
@@ -80,8 +83,10 @@ def test_random(text):
         raise Exception("Fail")
     else:
         print(f"Success: {text}")
-
-test_random("it works!")
+try:
+    test_random("it works!")
+except:
+    pass
 
 # Test4
 @retry((NameError, IOError), tries=20, delay=1, backoff=1)
@@ -94,4 +99,7 @@ def test_multiple_exceptions():
     else:
         raise KeyError("KeyError")
 
-test_multiple_exceptions()
+try:
+    test_multiple_exceptions()
+except:
+    pass
