@@ -1,4 +1,5 @@
 import smtplib
+from smtplib import SMTPException
 import tkinter
 from tkinter import *
 import re
@@ -9,12 +10,23 @@ def login():
 		global password
 		username = str(entry1.get())
 		password = str(entry2.get())
-		global server
-		# insecure connection TODO secure
-		server = smtplib.SMTP('smtp.gmail.com:587')
-		server.ehlo()
-		server.starttls() # upgrade to secure
-		server.login(username, password)
+		global smtpserver
+		try:
+			# insecure connection
+			smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
+			smtpserver.ehlo()
+			smtpserver.starttls() # upgrade to secure
+			smtpserver.ehlo()
+			smtpserver.login(username, password)
+		except smtplib.SMTPException as ex:
+			print(f"Error {ex}")
+			f2.pack()
+			label4.grid()
+			label4['text']="Enter a valid password"
+			btn2.grid_remove()
+			root.after(10, root.grid)
+			return
+
 		f2.pack()
 		btn2.grid()
 		label4['text'] = "Logged In!"
@@ -40,7 +52,7 @@ def send_mail():
 		msg = "From: "+username+"\n"+"To: "+receiver+"\n"+"subject: "+subject+"\n"+msgbody
 
 		try:
-			server.sendmail(username,receiver,msg)
+			smtpserver.sendmail(username,receiver,msg)
 			label9.grid()
 			label9['text']="Mail Sent"
 			root.after(10, label9.grid)
@@ -51,7 +63,7 @@ def send_mail():
 
 def logout():
 	try:
-		server.quit()
+		smtpserver.quit()
 		f3.pack_forget()
 		f2.pack()
 		label4.grid()
@@ -78,7 +90,7 @@ def validate_login():
 		if not EMAIL_REGEX.match(email_text):
 			f2.pack()
 			label4.grid()
-			label4['text']="Enter a valid email"
+			label4['text']="Enter a valid Email"
 			btn2.grid_remove()
 			root.after(10, root.grid)
 		else:
@@ -114,36 +126,38 @@ root = Tk()
 root.title("Chat Room Appication")
 
 #root.configure(bg="green")
-f1=Frame(root,height=100,width=100)
+f1=Frame(root,height=1000,width=800)
 f1.pack(side=TOP)
 
-label1=Label(f1, width=25,text="Enter your credentials",font=("calibri 18 bold"))
+label1=Label(f1, width=25,text="Enter your credentials",font=("Calibri 18 bold"))
 label1.grid(row=0,columnspan=3,pady=10,padx=10)
 
 label2=Label(f1, text="Email").grid(row=1,sticky=E,pady=5,padx=10)
 label3=Label(f1, text="Password").grid(row=2,sticky=E,pady=5,padx=10)
 
-entry1=Entry(f1).grid(row=1,column=1,pady=5)
-entry2=Entry(f1, show="").grid(row=2,column=1)
+entry1=Entry(f1)
+entry2=Entry(f1, show="*")
+entry1.grid(row=1,column=1,pady=5)
+entry2.grid(row=2,column=1)
 
 btn1=Button(f1,text="Login",width=10,bg="black",fg="white",command=lambda : login())
 btn1.grid(row=3,columnspan=3,pady=10)
 
 
-f2=Frame(root,height=100,width=100)
+f2=Frame(root)
 f2.pack(side=TOP,expand=NO,fill=NONE)
 
-label4=Label(f2, width=20,text="Login success",bg="cyan", fg="red",font=("calibri 12 bold"))
+label4=Label(f2, width=20,text="Login success",bg="cyan", fg="red",font=("Calibri 12 bold"))
 label4.grid(row=0,column=0,columnspan=2,pady=10)
 
 btn2=Button(f2,text="Logout",width=10,bg="black",fg="white",command=lambda : logout())
 btn2.grid(row=0,column=4,sticky=E,padx=(5,0), pady=10)
 
 
-f3=Frame(root,height=100,width=100)
+f3=Frame(root)
 f3.pack(side=TOP,expand=NO,fill=NONE)
 
-label5=Label(f3, width=20,text="Compose Email",bg="cyan", fg="red",font=("calibri 18 bold"))
+label5=Label(f3, width=20,text="Compose Email",bg="cyan", fg="red",font=("Calibri 18 bold"))
 label5.grid(row=0,columnspan=3,pady=10)
 
 label6=Label(f3, text="To").grid(row=1,sticky=E,pady=5)
@@ -158,7 +172,7 @@ entry5=Entry(f3).grid(row=3,column=1,pady=5, rowspan=3, ipady=10)
 btn3=Button(f3,text="Send Mail",width=10,bg="black",fg="white",command=lambda : send_mail())
 btn3.grid(row=6,columnspan=3, pady=10)
 
-label9=Label(f3, width=20,bg="black", fg="white",font=("calibri 18 bold"))
+label9=Label(f3, width=20,bg="black", fg="white",font=("Calibri 18 bold"))
 label9.grid(row=7,columnspan=3,pady=5)
 
 hide_login_label()
