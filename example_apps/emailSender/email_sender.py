@@ -12,7 +12,7 @@ def login():
 		password = str(entry2.get())
 		global smtpserver
 		try:
-			# insecure connection
+			# insecure connection TODO secure
 			smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
 			smtpserver.ehlo()
 			smtpserver.starttls() # upgrade to secure
@@ -33,6 +33,7 @@ def login():
 		root.after(10, root.grid)
 		f1.pack_forget()
 		root.after(10, root.grid)
+		f3.pack()
 		label9.grid_remove()
 		root.after(10,root.grid)
 
@@ -148,7 +149,7 @@ f2=Frame(root)
 f2.pack(side=TOP,expand=NO,fill=NONE)
 
 label4=Label(f2, width=20,text="Login success",bg="cyan", fg="red",font=("Calibri 12 bold"))
-label4.grid(row=0,column=0,columnspan=2,pady=10)
+label4.grid(row=0,column=0,columnspan=2,pady=5)
 
 btn2=Button(f2,text="Logout",width=10,bg="black",fg="white",command=lambda : logout())
 btn2.grid(row=0,column=4,sticky=E,padx=(5,0), pady=10)
@@ -162,12 +163,15 @@ label5.grid(row=0,columnspan=3,pady=10)
 
 label6=Label(f3, text="To").grid(row=1,sticky=E,pady=5)
 label7=Label(f3, text="Subject").grid(row=2,sticky=E,pady=5)
-label8=Label(f3, text="Message").grid(row=3,sticky=E,pady=5)
+label8=Label(f3, text="Message").grid(row=3,sticky=E)
 
-entry3=Entry(f3).grid(row=1,column=1,pady=5)
-entry4=Entry(f3).grid(row=2,column=1, pady=5)
-entry5=Entry(f3).grid(row=3,column=1,pady=5, rowspan=3, ipady=10)
+entry3=Entry(f3)
+entry4=Entry(f3)
+entry5=Entry(f3)
 
+entry3.grid(row=1,column=1,pady=5)
+entry4.grid(row=2,column=1, pady=5)
+entry5.grid(row=3,column=1,pady=5, rowspan=3, ipady=10)
 
 btn3=Button(f3,text="Send Mail",width=10,bg="black",fg="white",command=lambda : send_mail())
 btn3.grid(row=6,columnspan=3, pady=10)
