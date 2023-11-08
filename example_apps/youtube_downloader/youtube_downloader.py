@@ -5,6 +5,9 @@ from tkinter import *
 import re
 import threading
 
+
+# python -m pip install --upgrade pytube
+
 class Application:
 	def __init__(self, root):
 		self.root=root
@@ -18,6 +21,7 @@ class Application:
 		link_label.grid(pady=(0, 20))
 
 		self.youtubeEntryVar = StringVar()
+		self.youtubeEntryVar.set("https://www.youtube.com/watch?v=DkU9WFj8sYo")
 
 		self.youtubeEntry=Entry(self.root, width=70,textvariable=self.youtubeEntryVar,font=('Agency Fb', 25))
 		self.youtubeEntry.grid(pady=(0, 15), ipady=2)
@@ -84,7 +88,7 @@ class SecondApp:
 		self.youtubelink=youtubelink
 		self.folderName=foldername
 		self.choices=choices
-		self.yt=YouTube(self.youtubelink)
+		self.yt=YouTube(self.youtubelink, on_progress_callback=self.show_progress)
 
 		if (choices == "1"):
 			self.video_type=self.yt.streams.filter(only_audio=True).first()
@@ -93,26 +97,36 @@ class SecondApp:
 			self.video_type=self.yt.streams.first()
 			self.MaxFileSize=self.video_type.filesize
 
-		self.loadinglabel=Label(self.downloadWindow, text="Downloading in progress...")
+		self.loadinglabel=Label(self.downloadWindow, text="Downloading in progress...", font=("Small Fonts", 40))
 		self.loadinglabel.grid(pady=(100, 0))
 		self.loadingPercent=Label(self.downloadWindow, text="0",fg="green",font=("Agency FB", 40))
 		self.loadingPercent.grid(pady=(50, 0))
 		self.progressBar=ttk.Progressbar(self.downloadWindow, length=500, orient='horizontal', mode='indeterminate')
 		self.progressBar.grid(pady=(50, 0))
 		self.progressBar.start()
-
-		threading.Thread(target=self.yt.register_on_progress_callback(self.show_progress)).start()
+		# TODO fix progress bar
+		#threading.Thread(target=self.yt.register_on_progress_callback, args=(self.show_progress,)).start()
 		threading.Thread(target=self.downloadFile).start()
 
 	def downloadFile(self):
-		if self.choices=="1":
-			self.yt.streams.filter(only_audio=True).first().download(self.folderName)
+		try:
+			if self.choices=="1":
+				self.video_type.download(self.folderName)
 
-		if self.choices=="2":
-			self.yt.streams.first().download(self.folderName)
+			if self.choices=="2":
+				self.video_type.download(self.folderName)
+		except EOFError as err:
+		    print(err)
 
-	def show_progress(self, streams=None, Chunks=None, filehandle=None, bytes_remaining=None):
-		self.percentCount=float("%0.2f"% (100-(100*(bytes_remaining/self.MaxFileSize))))
+		else:
+		    print("\n====== Done - Check Download Dir =======")
+
+
+	def show_progress(self, stream=None, chunk=None, bytes_remaining=None):
+		print(f"bytes_remaining : {bytes_remaining}")
+		self.percentCount = 0
+		if bytes_remaining:
+			self.percentCount=float("%0.2f"% (100-(100*(bytes_remaining/self.MaxFileSize))))
 		if self.percentCount<100:
 			self.loadingPercent.config(text=self.percentCount)
 		else:
